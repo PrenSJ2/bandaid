@@ -1,4 +1,3 @@
-from pathlib import Path
 import json
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -20,6 +19,21 @@ class Settings(BaseSettings):
     openai_project_id: str = ''
     openai_api_key: str = ''
 
+    def load_service_account(self, file_path):
+        with open(file_path, 'r') as file:
+            service_account_info = json.load(file)
+
+        self.g_project_id = service_account_info.get('project_id', '')
+        self.g_client_email = service_account_info.get('client_email', '')
+        self.g_private_key_id = service_account_info.get('private_key_id', '')
+        self.g_private_key = service_account_info.get('private_key', '')
+        self.g_client_id = service_account_info.get('client_id', '')
+        self.g_auth_uri = service_account_info.get('auth_uri', 'https://accounts.google.com/o/oauth2/auth')
+        self.g_token_uri = service_account_info.get('token_uri', 'https://oauth2.googleapis.com/token')
+        self.g_auth_provider_x509_cert_url = service_account_info.get('auth_provider_x509_cert_url',
+                                                                      'https://www.googleapis.com/oauth2/v1/certs')
+        self.g_client_x509_cert_url = service_account_info.get('client_x509_cert_url', '')
+
     # Firebase Creds
     @property
     def firebase_credentials(self):
@@ -36,25 +50,4 @@ class Settings(BaseSettings):
             'client_x509_cert_url': self.g_client_x509_cert_url,
         }
 
-    def load_service_account(self, file_path: str):
-        service_account_path = Path(file_path)
-        if service_account_path.is_file():
-            with service_account_path.open() as f:
-                data = json.load(f)
-                self.g_project_id = data.get('project_id', '')
-                self.g_client_email = data.get('client_email', '')
-                self.g_private_key_id = data.get('private_key_id', '')
-                self.g_private_key = data.get('private_key', '')
-                self.g_client_id = data.get('client_id', '')
-                self.g_auth_uri = data.get('auth_uri', 'https://accounts.google.com/o/oauth2/auth')
-                self.g_token_uri = data.get('token_uri', 'https://oauth2.googleapis.com/token')
-                self.g_auth_provider_x509_cert_url = data.get('auth_provider_x509_cert_url',
-                                                              'https://www.googleapis.com/oauth2/v1/certs')
-                self.g_client_x509_cert_url = data.get('client_x509_cert_url', '')
-
     model_config = SettingsConfigDict(env_file='.env', extra='allow')
-
-
-# Usage
-settings = Settings()
-settings.load_service_account('service-account.json')
